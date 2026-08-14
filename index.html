@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mini Game Park</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:linear-gradient(135deg,#17132e,#261b54);color:#fff;min-height:100vh}
+.wrap{max-width:900px;margin:auto;padding:28px 16px 50px}.hero{text-align:center;padding:25px 0 18px}.hero h1{font-size:42px;margin:0 0 8px}.hero p{opacity:.8;margin:0}
+.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}.card{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:22px;padding:20px;box-shadow:0 10px 35px #0004}
+.icon{font-size:42px}.card h2{margin:8px 0}.card p{opacity:.75;min-height:42px}button{border:0;border-radius:13px;padding:12px 17px;background:#fff;color:#24184c;font-weight:800;cursor:pointer}button:hover{transform:translateY(-1px)}
+.panel{display:none;margin-top:20px;text-align:center}.panel.active{display:block}.box{max-width:560px;margin:auto;background:rgba(0,0,0,.22);border-radius:22px;padding:24px}.big{font-size:64px;font-weight:900;margin:12px}.result{font-size:20px;min-height:30px;margin:15px}.choices{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.back{margin-top:16px;background:#ffffff22;color:white;border:1px solid #ffffff33}.score{opacity:.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero"><h1>🎮 Mini Game Park</h1><p>サクッと遊べるミニゲーム集</p></div>
+  <div class="games">
+    <div class="card"><div class="icon">🎯</div><h2>反射神経ゲーム</h2><p>ボタンが変わった瞬間に押せ！</p><button onclick="openGame('reaction')">遊ぶ</button></div>
+    <div class="card"><div class="icon">✊</div><h2>じゃんけん</h2><p>コンピューターに勝てるかな？</p><button onclick="openGame('rps')">遊ぶ</button></div>
+    <div class="card"><div class="icon">🔢</div><h2>数字当て</h2><p>1〜100の数字を当てよう！</p><button onclick="openGame('guess')">遊ぶ</button></div>
+  </div>
+
+  <div id="reaction" class="panel"><div class="box">
+    <h2>🎯 反射神経ゲーム</h2><div id="rtStatus">準備OK！「スタート」を押してね</div>
+    <div id="rtBox" class="big">⚪</div><button id="rtBtn" onclick="reactionStart()">スタート</button>
+    <div id="rtResult" class="result"></div><button class="back" onclick="closeGames()">ゲーム一覧へ</button>
+  </div></div>
+
+  <div id="rps" class="panel"><div class="box">
+    <h2>✊ じゃんけん</h2><div class="choices">
+      <button onclick="rps('グー')">✊ グー</button><button onclick="rps('チョキ')">✌️ チョキ</button><button onclick="rps('パー')">🖐️ パー</button>
+    </div><div id="rpsResult" class="result"></div><button class="back" onclick="closeGames()">ゲーム一覧へ</button>
+  </div></div>
+
+  <div id="guess" class="panel"><div class="box">
+    <h2>🔢 数字当て</h2><p>1〜100の数字を入力！</p>
+    <input id="guessInput" type="number" min="1" max="100" style="padding:12px;border-radius:10px;border:0;width:150px;font-size:18px">
+    <button onclick="guess()">判定</button><div id="guessResult" class="result"></div>
+    <button class="back" onclick="newGuess()">新しい問題</button><button class="back" onclick="closeGames()">ゲーム一覧へ</button>
+  </div></div>
+</div>
+<script>
+function openGame(id){document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});if(id==='guess')newGuess()}
+function closeGames(){document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));window.scrollTo({top:0,behavior:'smooth'})}
+
+let timer,startTime,waiting=false;
+function reactionStart(){
+ const btn=document.getElementById('rtBtn'), box=document.getElementById('rtBox'), res=document.getElementById('rtResult');
+ clearTimeout(timer); waiting=true; btn.disabled=true; res.textContent=''; box.textContent='🟡'; document.getElementById('rtStatus').textContent='待って…まだ押さないで！';
+ timer=setTimeout(()=>{startTime=performance.now();box.textContent='🟢';document.getElementById('rtStatus').textContent='今！押せ！';waiting=false;btn.disabled=false;btn.textContent='押す！'},1000+Math.random()*2500);
+}
+document.getElementById('rtBtn').addEventListener('click',function(){
+ if(this.textContent==='押す！' && !waiting){let ms=Math.round(performance.now()-startTime);document.getElementById('rtResult').textContent=`⚡ ${ms} ms！`;document.getElementById('rtStatus').textContent='もう一回挑戦？';this.textContent='スタート';document.getElementById('rtBox').textContent='⚪'}
+});
+const hands=['グー','チョキ','パー'];
+function rps(me){let cpu=hands[Math.floor(Math.random()*3)],out=me===cpu?'あいこ！':((hands.indexOf(me)-hands.indexOf(cpu)+3)%3===2?'あなたの勝ち！':'コンピューターの勝ち！');document.getElementById('rpsResult').textContent=`あなた：${me}　CPU：${cpu}　→ ${out}`}
+let answer=0,tries=0;
+function newGuess(){answer=Math.floor(Math.random()*100)+1;tries=0;document.getElementById('guessInput').value='';document.getElementById('guessResult').textContent=''}
+function guess(){let n=Number(document.getElementById('guessInput').value);if(!n||n<1||n>100)return;tries++;let r=n===answer?`🎉 正解！${tries}回で当てた！`:n<answer?'もっと大きい！':'もっと小さい！';document.getElementById('guessResult').textContent=r;if(n===answer)setTimeout(newGuess,1800)}
+</script>
+</body>
+</html>
